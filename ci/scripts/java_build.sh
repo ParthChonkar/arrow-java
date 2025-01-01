@@ -28,7 +28,7 @@ java_jni_dist_dir=${3}
 
 : "${BUILD_DOCS_JAVA:=OFF}"
 
-mvn="mvn -B -DskipTests -Drat.skip=true -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn"
+mvn="mvn -X -B -DskipTests -Drat.skip=true -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn"
 
 if [ "$ARROW_JAVA_SKIP_GIT_PLUGIN" ]; then
   mvn="${mvn} -Dmaven.gitcommitid.skip=true"
