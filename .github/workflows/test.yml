@@ -46,9 +46,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - arch: AMD64
-            jdk: 11
-            macos: 13
           - arch: AArch64
             jdk: 11
             macos: latest
