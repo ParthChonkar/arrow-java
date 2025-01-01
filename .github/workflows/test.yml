@@ -37,47 +37,6 @@ env:
   DOCKER_VOLUME_PREFIX: ".docker/"
 
 jobs:
-  ubuntu:
-    name: AMD64 ${{ matrix.name }} JDK ${{ matrix.jdk }} Maven ${{ matrix.maven }}
-    runs-on: ubuntu-latest
-    if: ${{ !contains(github.event.pull_request.title, 'WIP') }}
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        jdk: [11, 17, 21, 23]
-        maven: [3.9.9]
-        image: [ubuntu, conda-jni-cdata]
-        include:
-          - image: ubuntu
-            name: "Ubuntu"
-          - image: conda-jni-cdata
-            name: "Conda JNI"
-    env:
-      JDK: ${{ matrix.jdk }}
-      MAVEN: ${{ matrix.maven }}
-    steps:
-      - name: Checkout Arrow
-        uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4.2.1
-        with:
-          fetch-depth: 0
-          submodules: recursive
-      - name: Cache Docker Volumes
-        uses: actions/cache@6849a6489940f00c2f30c0fb92c6274307ccb58a # v4.1.2
-        with:
-          path: .docker
-          key: maven-${{ matrix.jdk }}-${{ matrix.maven }}-${{ hashFiles('**/docker-compose.yml', '**/pom.xml') }}
-          restore-keys: maven-${{ matrix.jdk }}-${{ matrix.maven }}-
-      - name: Execute Docker Build
-        env:
-          # Enables build caching, but not strictly required
-          DEVELOCITY_ACCESS_KEY: ${{ secrets.GE_ACCESS_TOKEN }}
-        run: |
-          docker compose run \
-            -e CI=true \
-            -e "DEVELOCITY_ACCESS_KEY=$DEVELOCITY_ACCESS_KEY" \
-            ${{ matrix.image }}
-
   macos:
     name: ${{ matrix.arch }} macOS ${{ matrix.macos }} Java JDK ${{ matrix.jdk }}
     runs-on: macos-${{ matrix.macos }}
@@ -109,39 +68,11 @@ jobs:
         env:
           DEVELOCITY_ACCESS_KEY: ${{ secrets.GE_ACCESS_TOKEN }}
         run: ci/scripts/java_build.sh $(pwd) $(pwd)/build
+      - name: SSH-DEBUG
+        uses: lhotari/action-upterm@v1
       - name: Test
         shell: bash
         env:
           DEVELOCITY_ACCESS_KEY: ${{ secrets.GE_ACCESS_TOKEN }}
         run: ci/scripts/java_test.sh $(pwd) $(pwd)/build
 
-  windows:
-    name: AMD64 Windows Server 2022 Java JDK ${{ matrix.jdk }}
-    runs-on: windows-latest
-    if: ${{ !contains(github.event.pull_request.title, 'WIP') }}
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        jdk: [11]
-    steps:
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          java-version: ${{ matrix.jdk }}
-          distribution: 'temurin'
-      - name: Checkout Arrow
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          submodules: recursive
-      - name: Build
-        shell: bash
-        env:
-          DEVELOCITY_ACCESS_KEY: ${{ secrets.GE_ACCESS_TOKEN }}
-        run: ci/scripts/java_build.sh $(pwd) $(pwd)/build
-      - name: Test
-        shell: bash
-        env:
-          DEVELOCITY_ACCESS_KEY: ${{ secrets.GE_ACCESS_TOKEN }}
-        run: ci/scripts/java_test.sh $(pwd) $(pwd)/build
